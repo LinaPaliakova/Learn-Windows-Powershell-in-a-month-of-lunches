@@ -1,0 +1,124 @@
+TASK 1
+Display a list of running processes in a table that includes only the process names and
+ID numbers. Don’t let the table have a large blank area between the two columns.
+
+Get-Process | Format-Table -property Name,ID -autoSize
+
+TASK 2
+Run this:
+Get-WmiObject -class win32_systemdriver
+Now run that same command again, but format the output into a list that displays the
+driver short name, its display name, the path to the driver file, its start mode, and its
+current state. Display the path property as Path, not whatever the actual property is.
+
+Get-WmiObject -class win32_systemdriver | Format-List Name, DisplayName, @{name='Path';expression=
+{$_.Pathname}},StartMode, CurrentState
+
+TASK 3
+Have two computers (it's OK to use localhost twice) run this command:
+Get-PSProvider
+Use Remoting to do this. Ensure that the output includes the computer names.
+
+Invoke-Command –ScriptBlock { Get-PSProvider } –computerName Computer1,Computer2
+
+TASK 4
+Use Notepad to create a file named C:\Computers.txt. In that file, put the following:
+Localhost
+localhost
+You should have those two names on their own lines in the file—two lines total. Save
+the file and close Notepad. Then write a command that will list the running services
+on the computer names in C:\Computers.txt.
+
+Get-Service -ComputerName (Get-Content C:\Users\palina.paliakova\Documents\computers.txt)
+
+TASK 5
+Query all instances of Win32_LogicalDisk that have a drivetype of 3. Display the drive
+letter, its size, free space, and the percent free space. Once that works, re-run the com-
+mand to display only those instances that have 50 percent or more free disk space. You
+may have to adjust the percent free value in order to get a result on your computer.
+Hint: to calculate free space percentage, it's freespace/size * 100.
+Note that the Filter parameter of Get-WmiObject cannot contain mathematical
+expressions.
+
+Get-WmiObject -class Win32_LogicalDisk -filter "drivetype=3" | Select DeviceID, Size, FreeSpace, @{name='PerFreespace';expression=
+{$_.FreeSpace / $_.Size * 100  -as [int]}} | where {$_.PerFreespace -gt 50}
+
+TASK 6
+Display a list of all WMI classes in the root\CIMv2 namespace that start with win32
+using the CIM cmdlets.
+
+Get-CimClass -Namespace root\CIMv2 -ClassName win32*
+
+TASK 7
+Display a list of all Win32_Service instances where the StartMode is Auto and the
+State is not Running.
+
+Get-CimInstance -ClassName Win32_Service | where {$_.StartMode -eq 'Auto' -and $_.State -ne 'Running'}
+
+TASK 8
+Find a command that can send email messages. What are the mandatory parameters
+of this command?
+
+Send-MailMessage
+
+TASK 9
+Run a command that will display the folder permissions on C:\. You will find the output
+easier to read as a list.
+
+Get-Acl -Path C:\ | Format-List
+
+TASK 10
+Run a command that will display the permissions on every subfolder of C:\Users. Just
+the direct subfolders; you don’t need to recurse all files and folders. You’ll need to
+pipe one command to another command to achieve this. 
+
+Get-ChildItem -path C:\Users | Get-Acl
+
+TASK 11
+Find a command that will start Notepad under a credential other than the one you’ve
+used to log into the shell.
+
+Start-Process
+
+TASK 12
+Run a command that makes the shell pause, or idle, for 10 seconds.
+
+Start-Sleep –s 10
+
+TASK 13
+Can you find a help file (or files) that explains the shell’s various operators?
+
+help *operators*
+
+TASK 14
+Using Get-Winevent, display a list of all log files that have entries and sort the results
+in descending order by the number of entries.
+
+Get-WinEvent -ListLog * | Where { $_.RecordCount -gt 0 } | Sort-object -property RecordCount -Descending
+
+TASK 15
+Run this command:
+Get-CimInstance -Classname Win32_Processor
+Study the default output of this command. Now, modify the command so that it displays
+in a table. The table should include each processor’s number of cores, manufac-
+turer, and name. Also include a column called “MaxSpeed” that contains the
+processor’s maximum clock speed.
+
+Get-CimInstance -Classname Win32_Processor | Format-table -property NumberOfCores, Manufacturer, Name, @{name='MaxSpeed';expression=
+{$_.MaxClockSpeed}}
+
+TASK 16
+Run this command:
+Get-CimInstance -Classname Win32_Process
+Study the default output of this command, and pipe it to Get-Member if you want.
+Now, modify the command so that only processes with a peak working set size greater
+than 100,000 are displayed, and only show the process name, its path, and all of the
+peak properties.
+
+Get-CimInstance -Classname Win32_Process | Select  ProcessName, Path , PeakPageFileUsage, PeakVirtualSize, PeakWorkingSetSize | where {$_.PeakWorkingSetSize -gt 100000}
+
+TASK 17
+If you are running PowerShell 5 or later, use the Find-Module command to discover
+packages with a tag of Network. Display the modules' names, versions, and descriptions
+
+Find-Module -tag Network | Select Version, Name, Description
