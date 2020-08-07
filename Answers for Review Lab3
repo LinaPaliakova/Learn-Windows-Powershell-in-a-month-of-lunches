@@ -64,5 +64,5 @@ Find all installed products using WMI and with Win32_Product class. This might
 take a while to run so use a background job. When finished, get the results and display
 the product name, company, version, install date, and installation location in a grid
 view.
-start-job {Get-WmiObject -Class  Win32_Product | Select Name, Vendor, Version, InstallDate, Installocation
+start-job {Get-WmiObject -Class  Win32_Product | Select Name, Vendor, Version, InstallDate, Installocation}
 Receive-job -id   | Out-gridview
