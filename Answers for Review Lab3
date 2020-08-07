@@ -1,0 +1,68 @@
+Answers for Review Lab3
+
+1.What command would you use to start a job that runs entirely on your local
+computer? - Start-job
+2 What command would you use to start a job that was coordinated by your computer, but whose contents were processed by remote computers? - Invoke-command
+3 Is ${computer name} a legal variable name? - yes
+4 How could you display a list of all variables currently defined in the shell? - Get-Variable
+5 What command could be used to prompt a user for input? - Read-Host
+6 What command should be used to produce output that normally displays on
+the screen, but that could be redirected to various other formats? -  Write-Output
+
+
+
+TASK 1
+Create a list of running processes. The list should include only process name, ID, VM,
+and PM columns. Show the VM and PM values in megabytes. Put the list into an HTMLformatted file named C:\Procs.html. Make sure that the HTML file has an embedded
+title of “Current Processes”. Display the file in a web browser and make sure that title
+appears in the browser window’s title bar. The formula to calculate megabytes, displaying the value as a whole number, goes something like $_.VM / 1MB as [int] for the VM
+property. Then see if you can re-import the file back into PowerShell.
+
+Get-Process | Select  name, ID, @{Label="VM";Expression={[int]($_.VM/1024)}}, @{Label="PM";Expression={[int]($_.PM/1024)}} | Format-List | ConvertTo-Html  -Title "Current Process" > C:\Windows\Procs.html ; ii C:\Windows\Procs.html
+
+
+TASK 2
+Using WMI or the CIM cmdlets create a tab-delimited file named C:\Services.tdf that
+contains all services on your computer. "`t" (backtick t inside double quotes) is
+PowerShell’s escape sequence for a horizontal tab. Include only the names, display
+name, status, start mode, and account.
+
+Get-WmiObject -Class Win32_Service  | Select  Name, DisplayName, Status, StartMode, SystemName  | export-csv -delimiter "`t" -path C:\Windows\Services.tdf  -notype
+
+TASK 3
+First, prompt the user to enter a computername and save the results to a variable.
+Then using the CIM cmdlets query a computer (use the variable) for its operating system name, version number, when it last booted, and how long it has been running
+(uptime). Include the computername in your output. You can figure out the uptime
+by subtracting the last boot time from the current date and time.
+
+$computername = read-host "Enter a computer name"
+Get-CimInstance -ClassName Win32_OperatingSystem -ComputerName $computername |  Select PSComputerName, name, Version, @{Label='Uptime'; Expression = {(((get-date)-$_.lastbootuptime))}}
+
+
+TASK 4
+Take your commands from the previous task and turn it into a parameterized script.
+Hopefully it is obvious that the computername is a good candidate. Include an alias of
+CN and make it mandatory. The output should show the same properties, but you may
+want to come up with a better display name for the operating system name property.
+
+[cmdletbinding()]
+Param(
+[Parameter(Mandatory=$True,HelpMessage = "Enter a computer name")]
+[Alias("CN")]
+[string]$Computername
+)
+Write-Verbose "Getting Operating system information from $Computername."
+Get-CimInstance -ClassName -CimSession $computername |
+Select @{Name="OS";Expression={$_.Caption}},Version,LastBootUptime,
+@{Name="Uptime";Expression={(Get-Date) - $_.lastBootUpTime}},
+@{Name="Computername";Expression={$_.PSComputername}}
+Write-Verbose "Done."
+
+
+TASK 5
+Find all installed products using WMI and with Win32_Product class. This might
+take a while to run so use a background job. When finished, get the results and display
+the product name, company, version, install date, and installation location in a grid
+view.
+start-job {Get-WmiObject -Class  Win32_Product | Select Name, Vendor, Version, InstallDate, Installocation
+Receive-job -id   | Out-gridview
